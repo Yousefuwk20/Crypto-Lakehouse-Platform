@@ -14,8 +14,22 @@ def staged_klines():
         .withColumn("quote_asset_volume", F.col("quote_asset_volume").cast(DecimalType(18,8)))
         .withColumn("taker_buy_base_vol", F.col("taker_buy_base_vol").cast(DecimalType(18,8)))
         .withColumn("taker_buy_quote_vol", F.col("taker_buy_quote_vol").cast(DecimalType(18,8)))
-        .withColumn("open_time", (F.col("open_time") / 1000).cast(TimestampType()))
-        .withColumn("close_time", (F.col("close_time") / 1000).cast(TimestampType()))
+        .withColumn("open_time",
+            F.when(
+                F.col("open_time") > 9999999999999,  # 16-digit microseconds
+                (F.col("open_time") / 1000000).cast(TimestampType())
+            ).otherwise(
+                (F.col("open_time") / 1000).cast(TimestampType())
+            )
+        )
+        .withColumn("close_time",
+            F.when(
+                F.col("close_time") > 9999999999999,
+                (F.col("close_time") / 1000000).cast(TimestampType())
+            ).otherwise(
+                (F.col("close_time") / 1000).cast(TimestampType())
+            )
+        )
         .withColumn("price_range", F.col("high") - F.col("low"))
         .withColumn("price_change", F.col("close") - F.col("open"))
         .withColumn("price_change_pct", ((F.col("close") - F.col("open")) / F.col("open")) * 100)
