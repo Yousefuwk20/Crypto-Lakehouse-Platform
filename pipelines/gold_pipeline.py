@@ -125,11 +125,11 @@ def fact_klines():
     )
 
 @dlt.view(
-    name = "quality_gap_report",
+    name = "v_quality_gap_report",
     comment = "Identifies missing minutes in fact_klines by comparing against dim_time"
 )
 
-def quality_gap_report():
+def v_quality_gap_report():
     symbols = dlt.read("binance_platform.gold.dim_symbol").select("symbol_id", "symbol", F.col("tracking_start_ts").alias("start_ts"))
 
     time_master = dlt.read("binance_platform.gold.dim_time").filter(

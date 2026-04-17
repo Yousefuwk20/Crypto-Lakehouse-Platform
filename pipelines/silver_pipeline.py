@@ -7,14 +7,14 @@ def staged_klines():
     return (
         dlt.read_stream("binance_platform.bronze.raw_klines")
         .select("*")
-        .withColumn("open", F.col("open").cast(DecimalType(38,18)))
-        .withColumn("high", F.col("high").cast(DecimalType(38,18)))
-        .withColumn("low", F.col("low").cast(DecimalType(38,18)))
-        .withColumn("close", F.col("close").cast(DecimalType(38,18)))
-        .withColumn("volume", F.col("volume").cast(DecimalType(38,18)))
-        .withColumn("quote_asset_volume", F.col("quote_asset_volume").cast(DecimalType(38,18)))
-        .withColumn("taker_buy_base_vol", F.col("taker_buy_base_vol").cast(DecimalType(38,18)))
-        .withColumn("taker_buy_quote_vol", F.col("taker_buy_quote_vol").cast(DecimalType(38,18)))
+        .withColumn("open", F.col("open").cast(DecimalType(18,8)))
+        .withColumn("high", F.col("high").cast(DecimalType(18,8)))
+        .withColumn("low", F.col("low").cast(DecimalType(18,8)))
+        .withColumn("close", F.col("close").cast(DecimalType(18,8)))
+        .withColumn("volume", F.col("volume").cast(DecimalType(18,8)))
+        .withColumn("quote_asset_volume", F.col("quote_asset_volume").cast(DecimalType(18,8)))
+        .withColumn("taker_buy_base_vol", F.col("taker_buy_base_vol").cast(DecimalType(18,8)))
+        .withColumn("taker_buy_quote_vol", F.col("taker_buy_quote_vol").cast(DecimalType(18,8)))
         .withColumn("open_time_ts",
             F.when(
                 F.col("open_time") > 9999999999999,
