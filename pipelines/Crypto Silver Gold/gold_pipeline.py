@@ -1,5 +1,6 @@
 import dlt
 from pyspark.sql import functions as F
+from pyspark.sql.window import Window
 from pyspark.sql.types import (
     DecimalType, TimestampType,
     StringType, BooleanType, IntegerType
@@ -7,7 +8,7 @@ from pyspark.sql.types import (
 
 # dim_symbol
 @dlt.table(
-    name = "binance_platform.gold.dim_symbol",
+    name = "dim_symbol",
     comment = "Curated metadata for our 10 active trading pairs",
     table_properties = {"quality": "gold"}
 )
@@ -26,11 +27,11 @@ def dim_symbol():
             "s.quote_precision",
             "s.tracking_start_ts"
             )
-        .withColumn("symbol_id", F.abs(F.hash("symbol")))
+        .withColumn("symbol_id", F.row_number().over(Window.orderBy("symbol")))
     )
 
 @dlt.table(
-    name    = "binance_platform.gold.dim_time",
+    name    = "dim_time",
     comment = "Time dimension — minute grain from 2019 to 2030",
     table_properties = {"quality": "gold"},
     cluster_by = ["timestamp_key"]
@@ -81,7 +82,7 @@ def dim_time():
 
 # fact_klines
 @dlt.table(
-    name    = "binance_platform.gold.fact_klines",
+    name    = "fact_klines",
     comment = "Core fact table — 1min OHLCV per symbol",
     table_properties = {
         "quality"                         : "gold",
@@ -94,8 +95,8 @@ def dim_time():
 @dlt.expect_or_fail("valid_time_key",   "timestamp_key IS NOT NULL")
 
 def fact_klines():
-    silver  = dlt.read_stream("binance_platform.silver.clean_klines")
-    symbols = dlt.read("binance_platform.gold.dim_symbol")
+    silver  = dlt.read("binance_platform.silver.clean_klines")
+    symbols = dlt.read("dim_symbol")
 
     return (
         silver
@@ -124,52 +125,43 @@ def fact_klines():
         )
     )
 
-@dlt.view(
-    name = "v_quality_gap_report",
-    comment = "Identifies missing minutes in fact_klines by comparing against dim_time"
+@dlt.table(
+    name="quality_gap_report",
+    comment="Checks for missing minutes in the last 7 days. Avoids full-history Cartesian explosion.",
+    table_properties={"quality": "gold"}
 )
 
-def v_quality_gap_report():
-    symbols = dlt.read("binance_platform.gold.dim_symbol").select("symbol_id", "symbol", F.col("tracking_start_ts").alias("start_ts"))
-
-    time_master = dlt.read("binance_platform.gold.dim_time").filter(
-        F.col("timestamp_key") < F.expr("date_trunc('minute', current_timestamp())")
+def quality_gap_report():
+    fact = dlt.read("fact_klines")
+    symbols = dlt.read("dim_symbol")
+    
+    lookback_start = F.date_sub(F.current_date(), 7)
+    
+    expected_minutes = (
+        spark.range(0, 7 * 24 * 60)
+        .withColumn("minute_offset", F.expr("cast(id as int)"))
+        .withColumn("expected_time", F.expr("date_add(current_date(), -7) + interval 1 minute * minute_offset"))
+        .filter(F.col("expected_time") < F.current_timestamp())
     )
     
-    fact = dlt.read("binance_platform.gold.fact_klines")
+    expected_matrix = expected_minutes.crossJoin(F.broadcast(symbols.select("symbol_id", "symbol")))
+    actual_records = fact.filter(F.col("timestamp_key") >= lookback_start).select("symbol_id", "timestamp_key")
     
-    bounds = fact.groupBy("symbol_id")\
-                 .agg(F.max("timestamp_key").alias("end_ts")
-)
-
-    expected = (
-        bounds
-        .join(symbols, on="symbol_id", how="inner")
-        .join(
-            time_master,
-            (F.col("timestamp_key") >= F.col("start_ts")) &
-            (F.col("timestamp_key") <= F.col("end_ts")),
-            how="inner"
-        )
-    )
-
-    fact_keys = fact.select("symbol_id", "timestamp_key").distinct()
-
     return (
-        expected
-        .join(fact_keys, on=["symbol_id", "timestamp_key"], how="left_anti")
-        .select(
-            "symbol",
-            "symbol_id",
-            "timestamp_key",
-            F.col("trading_session"),
-            F.lit("MISSING_MINUTE").alias("issue_type")
+        expected_matrix
+        .join(
+            actual_records,
+            (expected_matrix.symbol_id == actual_records.symbol_id) & 
+            (expected_matrix.expected_time == actual_records.timestamp_key),
+            how="left_anti"
         )
+        .select("symbol", "expected_time")
+        .withColumnRenamed("expected_time", "missing_minute")
     )
 
 
 @dlt.table(
-    name = "binance_platform.gold.agg_hourly_summary",
+    name = "agg_hourly_summary",
     comment = "Finalized hourly OHLCV and market dynamics. Emits 5 minutes after the hour closes.",
     table_properties = {"quality": "gold"},
     cluster_by = ["symbol_id", "hour_start"]
@@ -177,8 +169,7 @@ def v_quality_gap_report():
 
 def agg_hourly_summary():
     return (
-        dlt.read_stream("binance_platform.gold.fact_klines")
-        .withWatermark("timestamp_key", "5 minutes")
+        dlt.read("fact_klines")
         
         .groupBy(
             "symbol_id",
@@ -220,7 +211,7 @@ def agg_hourly_summary():
 
 
 @dlt.table(
-    name = "binance_platform.gold.agg_daily_summary",
+    name = "agg_daily_summary",
     comment = "Finalized daily OHLCV and market dynamics. Emits only when the UTC day is fully complete.",
     table_properties = {"quality": "gold"},
     cluster_by = ["symbol_id", "date"]
@@ -228,8 +219,7 @@ def agg_hourly_summary():
 
 def agg_daily_summary():
     return (
-        dlt.read_stream("binance_platform.gold.fact_klines")
-        .withWatermark("timestamp_key", "1 hour")
+        dlt.read("fact_klines")
         
         .groupBy(
             "symbol_id",

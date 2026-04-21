@@ -2,11 +2,10 @@ import dlt
 from pyspark.sql import functions as F
 from pyspark.sql.types import DecimalType, TimestampType
 
-@dlt.view(name="staged_klines")
-def staged_klines():
+@dlt.view(name="v_staged_klines")
+def v_staged_klines():
     return (
-        dlt.read_stream("binance_platform.bronze.raw_klines")
-        .select("*")
+        dlt.read_stream("binance_platform.bronze.unified_bronze_klines")
         .withColumn("open", F.col("open").cast(DecimalType(18,8)))
         .withColumn("high", F.col("high").cast(DecimalType(18,8)))
         .withColumn("low", F.col("low").cast(DecimalType(18,8)))
@@ -34,7 +33,9 @@ def staged_klines():
         .withColumn("price_range", F.col("high") - F.col("low"))
         .withColumn("price_change", F.col("close") - F.col("open"))
         .withColumn("price_change_pct", 
-            ((F.col("close") - F.col("open")) / F.nullif(F.col("open"), F.lit(0))) * 100
+                    (F.when(F.col("open") != 0,
+                            (F.col("close") - F.col("open")) / F.col("open") *100)
+                     .otherwise(None))
         )
         .withColumn("buy_sell_ratio",
             F.when(
@@ -51,6 +52,11 @@ KLINE_RULES = {
     "valid_symbol": "symbol IS NOT NULL"
 }
 
+@dlt.view(name="v_valid_klines")
+def v_valid_klines():
+    pass_condition = " AND ".join([f"({r})" for r in KLINE_RULES.values()])
+    return dlt.read_stream("v_staged_klines").filter(pass_condition)
+
 # The Dead Letter Queue (DLQ) Table
 @dlt.table(
     name = "binance_platform.silver.quarantine_klines",
@@ -62,27 +68,30 @@ def quarantine_klines():
     fail_condition = "NOT (" + " AND ".join([f"({r})" for r in KLINE_RULES.values()]) + ")"
     
     return (
-        dlt.read_stream("staged_klines")
+        dlt.read_stream("v_staged_klines")
         .filter(fail_condition)
         .withColumn("quarantine_ts", F.current_timestamp())
-        .select("symbol", "open_time", "open_time_ts", "source_file", "quarantine_ts")
+        .withColumn("failed_rule",
+            F.when(~F.expr(KLINE_RULES["valid_price"]),     F.lit("valid_price"))
+             .when(~F.expr(KLINE_RULES["valid_timestamp"]), F.lit("valid_timestamp"))
+             .when(~F.expr(KLINE_RULES["valid_symbol"]),    F.lit("valid_symbol"))
+             .otherwise(F.lit("multiple_or_unknown"))
+        )
     )
 
 dlt.create_streaming_table(
     name = "binance_platform.silver.clean_klines",
     table_properties = {
         "quality": "silver",
-        "delta.enableDeletionVectors": "true",
-        "delta.enableChangeDataFeed": "true" 
-    },
-    cluster_by = ["symbol", "open_time_ts"] 
+        "delta.enableDeletionVectors": "true"
+        },
+    cluster_by = ["symbol", "open_time"] 
 )
 
 dlt.apply_changes(
     target = "binance_platform.silver.clean_klines",
-    source = "staged_klines",
+    source = "v_valid_klines",
     keys = ["symbol", "open_time_ts"],
     sequence_by = F.col("ingestion_timestamp"),
-    where = " AND ".join([f"({r})" for r in KLINE_RULES.values()]),
     stored_as_scd_type = 1
 )
