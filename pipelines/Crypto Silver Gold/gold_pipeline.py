@@ -86,7 +86,6 @@ def dim_time():
     comment = "Core fact table — 1min OHLCV per symbol",
     table_properties = {
         "quality"                         : "gold",
-        "pipelines.autoOptimize.managed"  : "true"
     },
     cluster_by = ["symbol_id", "timestamp_key"]
 )
@@ -95,8 +94,15 @@ def dim_time():
 @dlt.expect_or_fail("valid_time_key",   "timestamp_key IS NOT NULL")
 
 def fact_klines():
-    silver  = dlt.read("binance_platform.silver.clean_klines")
+    silver_stream  = dlt.read_stream("v_valid_klines")
     symbols = dlt.read("dim_symbol")
+
+    silver = (
+        silver_stream
+        .filter(F.col("is_final") == True)
+        .withWatermark("open_time_ts", "10 minutes")
+        .dropDuplicates(["symbol", "open_time_ts"])
+    )
 
     return (
         silver
@@ -122,6 +128,10 @@ def fact_klines():
             F.col("price_change"),
             F.col("price_change_pct"),
             F.col("buy_sell_ratio"),
+
+            # Columns for auditing    
+            F.col("ingestion_timestamp"), 
+            F.col("source_system")
         )
     )
 
@@ -173,7 +183,7 @@ def agg_hourly_summary():
         
         .groupBy(
             "symbol_id",
-            F.window("timestamp_key", "1 hour").alias("time_window")
+            F.date_trunc("hour", F.col("timestamp_key")).alias("hour_start")
         )
         
         .agg(
@@ -189,7 +199,7 @@ def agg_hourly_summary():
         
         .select(
             "symbol_id",
-            F.col("time_window.start").alias("hour_start"),
+            "hour_start",
             
             "open", "high", "low", "close",
             "total_base_volume", 
@@ -223,7 +233,7 @@ def agg_daily_summary():
         
         .groupBy(
             "symbol_id",
-            F.window("timestamp_key", "1 day").alias("time_window")
+            F.to_date("timestamp_key").alias("date")
         )
         
         .agg(
@@ -239,7 +249,7 @@ def agg_daily_summary():
         
         .select(
             "symbol_id",
-            F.to_date("time_window.start").alias("date"),
+            "date",
             
             "open", "high", "low", "close",
             "total_base_volume", 
