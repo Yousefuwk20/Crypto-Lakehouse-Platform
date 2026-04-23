@@ -51,3 +51,28 @@ resources:
         pause_status: "UNPAUSED"
         quartz_cron_schedule: "0 0/30 * * * ?"
         timezone_id: "UTC"
+
+    # 3. Alert for Missing Minutes (Quality Gap)
+    missing_minutes_alert:
+      display_name: "[${bundle.target}] WARNING: Missing Minutes Detected"
+      warehouse_id: ${var.warehouse_id}
+      query_text: |
+        SELECT COUNT(*) AS missing_minutes
+        FROM binance_platform.gold.quality_gap_report
+        WHERE missing_minute > current_timestamp() - INTERVAL 1 HOUR
+      evaluation:
+        comparison_operator: "GREATER_THAN"
+        source:
+          name: "missing_minutes"
+          display: "missing_minutes"
+        threshold:
+          value:
+            double_value: 0
+        notification:
+          notify_on_ok: false
+          subscriptions:
+            - user_email: "${workspace.current_user.userName}"
+      schedule:
+        pause_status: "UNPAUSED"
+        quartz_cron_schedule: "0 0/15 * * * ?"
+        timezone_id: "UTC"

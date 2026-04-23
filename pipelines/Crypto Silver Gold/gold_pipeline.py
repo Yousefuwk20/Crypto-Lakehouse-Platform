@@ -101,7 +101,7 @@ def fact_klines():
     silver = (
         silver_stream
         .filter(F.col("is_final") == True)
-        .withWatermark("open_time_ts", "2 minutes")
+        .withWatermark("open_time_ts", "10 minutes")
         .dropDuplicates(["symbol", "open_time_ts"])
     )
 
