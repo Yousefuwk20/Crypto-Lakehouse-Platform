@@ -1,0 +1,1527 @@
+{
+  "datasets": [
+    {
+      "name": "c090de20",
+      "displayName": "fact_klines",
+      "config": {
+        "version": "1.1",
+        "source": "binance_platform.gold.fact_klines",
+        "dimensions": [
+          {
+            "name": "symbol_id",
+            "expr": "source.symbol_id",
+            "displayName": "Symbol Id"
+          },
+          {
+            "name": "timestamp_key",
+            "expr": "source.timestamp_key",
+            "displayName": "Timestamp Key"
+          },
+          {
+            "name": "open",
+            "expr": "source.open",
+            "displayName": "Open"
+          },
+          {
+            "name": "high",
+            "expr": "source.high",
+            "displayName": "High"
+          },
+          {
+            "name": "low",
+            "expr": "source.low",
+            "displayName": "Low"
+          },
+          {
+            "name": "close",
+            "expr": "source.close",
+            "displayName": "Close"
+          },
+          {
+            "name": "volume",
+            "expr": "source.volume",
+            "displayName": "Volume"
+          },
+          {
+            "name": "quote_asset_volume",
+            "expr": "source.quote_asset_volume",
+            "displayName": "Quote Asset Volume"
+          },
+          {
+            "name": "number_of_trades",
+            "expr": "source.number_of_trades",
+            "displayName": "Number Of Trades"
+          },
+          {
+            "name": "taker_buy_base_vol",
+            "expr": "source.taker_buy_base_vol",
+            "displayName": "Taker Buy Base Vol"
+          },
+          {
+            "name": "taker_buy_quote_vol",
+            "expr": "source.taker_buy_quote_vol",
+            "displayName": "Taker Buy Quote Vol"
+          },
+          {
+            "name": "price_range",
+            "expr": "source.price_range",
+            "displayName": "Price Range"
+          },
+          {
+            "name": "price_change",
+            "expr": "source.price_change",
+            "displayName": "Price Change"
+          },
+          {
+            "name": "price_change_pct",
+            "expr": "source.price_change_pct",
+            "displayName": "Price Change Pct"
+          },
+          {
+            "name": "buy_sell_ratio",
+            "expr": "source.buy_sell_ratio",
+            "displayName": "Buy Sell Ratio"
+          },
+          {
+            "name": "ingestion_timestamp",
+            "expr": "source.ingestion_timestamp",
+            "displayName": "Ingestion Timestamp"
+          },
+          {
+            "name": "source_system",
+            "expr": "source.source_system",
+            "displayName": "Source System"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "177a7f3b",
+      "displayName": "agg_daily_summary",
+      "config": {
+        "source": "binance_platform.gold.agg_daily_summary",
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          },
+          {
+            "displayName": "Avg Buy Pressure",
+            "format": {
+              "type": "percentage",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "avg_buy_pressure",
+            "expr": "AVG(buy_pressure_ratio)",
+            "comment": "Average buy pressure ratio - values above 0.5 indicate taker buy volume dominance"
+          },
+          {
+            "displayName": "Avg VWAP",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            },
+            "name": "avg_vwap",
+            "expr": "AVG(vwap)",
+            "comment": "Average Volume Weighted Average Price per period"
+          },
+          {
+            "displayName": "VWAP 7-Day Rolling Avg",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            },
+            "window": [
+              {
+                "order": "date",
+                "range": "trailing 7 day",
+                "semiadditive": "last"
+              }
+            ],
+            "name": "rolling_vwap_7d",
+            "expr": "MEASURE(avg_vwap)",
+            "comment": "7-day trailing rolling average of VWAP - smooths out daily fluctuations"
+          },
+          {
+            "displayName": "Avg Open",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            },
+            "name": "avg_open",
+            "expr": "AVG(open)",
+            "comment": "Average opening price"
+          },
+          {
+            "displayName": "Avg High",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            },
+            "name": "avg_high",
+            "expr": "AVG(high)",
+            "comment": "Average daily high price"
+          },
+          {
+            "displayName": "Avg Low",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            },
+            "name": "avg_low",
+            "expr": "AVG(low)",
+            "comment": "Average daily low price"
+          },
+          {
+            "displayName": "Avg Close",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            },
+            "name": "avg_close",
+            "expr": "AVG(close)",
+            "comment": "Average closing price"
+          },
+          {
+            "displayName": "Total Volume",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 0.0
+              },
+              "abbreviation": "compact"
+            },
+            "name": "sum_volume",
+            "expr": "SUM(total_base_volume)",
+            "comment": "Sum of daily base asset volume"
+          },
+          {
+            "displayName": "Avg Amplitude %",
+            "format": {
+              "type": "percentage",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            },
+            "name": "avg_amplitude",
+            "expr": "AVG(amplitude_pct)",
+            "comment": "Average daily price amplitude percentage - measures volatility"
+          },
+          {
+            "displayName": "Total Trades",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 0.0
+              },
+              "abbreviation": "compact"
+            },
+            "name": "total_trades_sum",
+            "expr": "SUM(total_trades)",
+            "comment": "Sum of daily trade count"
+          }
+        ],
+        "version": "1.1",
+        "dimensions": [
+          {
+            "name": "symbol",
+            "expr": "symbols.symbol",
+            "displayName": "Symbol"
+          },
+          {
+            "name": "symbol_id",
+            "expr": "source.symbol_id",
+            "displayName": "Symbol Id"
+          },
+          {
+            "name": "date",
+            "expr": "source.date",
+            "displayName": "Date"
+          },
+          {
+            "name": "trade_quarter",
+            "expr": "CONCAT(YEAR(date), '-Q', QUARTER(date))",
+            "displayName": "Trade Quarter"
+          },
+          {
+            "name": "open",
+            "expr": "source.open",
+            "displayName": "Open"
+          },
+          {
+            "name": "high",
+            "expr": "source.high",
+            "displayName": "High"
+          },
+          {
+            "name": "low",
+            "expr": "source.low",
+            "displayName": "Low"
+          },
+          {
+            "name": "close",
+            "expr": "source.close",
+            "displayName": "Close"
+          },
+          {
+            "name": "total_base_volume",
+            "expr": "source.total_base_volume",
+            "displayName": "Total Base Volume"
+          },
+          {
+            "name": "total_trades",
+            "expr": "source.total_trades",
+            "displayName": "Total Trades"
+          },
+          {
+            "name": "vwap",
+            "expr": "source.vwap",
+            "displayName": "Vwap"
+          },
+          {
+            "name": "amplitude_pct",
+            "expr": "source.amplitude_pct",
+            "displayName": "Amplitude Pct"
+          },
+          {
+            "name": "buy_pressure_ratio",
+            "expr": "source.buy_pressure_ratio",
+            "displayName": "Buy Pressure Ratio"
+          }
+        ],
+        "joins": [
+          {
+            "name": "symbols",
+            "source": "binance_platform.gold.dim_symbol",
+            "on": "source.symbol_id = symbols.symbol_id"
+          }
+        ]
+      }
+    },
+    {
+      "name": "13ea049a",
+      "displayName": "agg_hourly_summary",
+      "config": {
+        "version": "1.1",
+        "source": "binance_platform.gold.agg_hourly_summary",
+        "dimensions": [
+          {
+            "name": "symbol_id",
+            "expr": "source.symbol_id",
+            "displayName": "Symbol Id"
+          },
+          {
+            "name": "hour_start",
+            "expr": "source.hour_start",
+            "displayName": "Hour Start"
+          },
+          {
+            "name": "open",
+            "expr": "source.open",
+            "displayName": "Open"
+          },
+          {
+            "name": "high",
+            "expr": "source.high",
+            "displayName": "High"
+          },
+          {
+            "name": "low",
+            "expr": "source.low",
+            "displayName": "Low"
+          },
+          {
+            "name": "close",
+            "expr": "source.close",
+            "displayName": "Close"
+          },
+          {
+            "name": "total_base_volume",
+            "expr": "source.total_base_volume",
+            "displayName": "Total Base Volume"
+          },
+          {
+            "name": "total_trades",
+            "expr": "source.total_trades",
+            "displayName": "Total Trades"
+          },
+          {
+            "name": "vwap",
+            "expr": "source.vwap",
+            "displayName": "Vwap"
+          },
+          {
+            "name": "amplitude_pct",
+            "expr": "source.amplitude_pct",
+            "displayName": "Amplitude Pct"
+          },
+          {
+            "name": "buy_pressure_ratio",
+            "expr": "source.buy_pressure_ratio",
+            "displayName": "Buy Pressure Ratio"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    }
+  ],
+  "pages": [
+    {
+      "name": "1e1bd719",
+      "displayName": "Market Sentiment",
+      "layout": [
+        {
+          "widget": {
+            "name": "d86bf34f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "measure(avg_buy_pressure)",
+                      "expression": "MEASURE(`avg_buy_pressure`)"
+                    },
+                    {
+                      "name": "trade_quarter",
+                      "expression": "`trade_quarter`"
+                    },
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`trade_quarter` IS NULL OR `trade_quarter` NOT IN ('2026-Q2')"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Buy Pressure Heatmap",
+                "showTitle": true
+              },
+              "widgetType": "heatmap",
+              "encodings": {
+                "x": {
+                  "fieldName": "trade_quarter",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Trade Quarter",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "symbol",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Symbol",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "color": {
+                  "fieldName": "measure(avg_buy_pressure)",
+                  "displayName": "Avg Buy Pressure",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "vwap_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "measure(rolling_vwap_7d)",
+                      "expression": "MEASURE(`rolling_vwap_7d`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "VWAP 7-Day Rolling Trend",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(rolling_vwap_7d)",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "VWAP 7-Day Rolling Avg",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "symbol",
+                  "legend": {
+                    "position": "top"
+                  },
+                  "displayName": "Symbol",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "symbol_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "symbol_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Symbol",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "symbol",
+                    "queryName": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "page_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Market Sentiment Overview\n",
+                "\n",
+                "Buy pressure heatmap and VWAP rolling trend across **10 Binance USDT pairs** from 2019 to present. Blue = buyer dominance (ratio > 0.5), lighter = seller pressure."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_pressure",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "measure(avg_buy_pressure)",
+                      "expression": "MEASURE(`avg_buy_pressure`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Avg Buy Pressure",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(avg_buy_pressure)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "displayName": "Avg Buy Pressure"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_trades",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "measure(total_trades_sum)",
+                      "expression": "MEASURE(`total_trades_sum`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Trades",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(total_trades_sum)",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Trades"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_volatility",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "measure(avg_amplitude)",
+                      "expression": "MEASURE(`avg_amplitude`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Avg Daily Volatility",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(avg_amplitude)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Avg Amplitude %"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "price_action",
+      "displayName": "Price Action",
+      "layout": [
+        {
+          "widget": {
+            "name": "symbol_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "symbol_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Symbol",
+                "showTitle": true
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "symbol",
+                    "queryName": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ohlc_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "measure(avg_close)",
+                      "expression": "MEASURE(`avg_close`)"
+                    },
+                    {
+                      "name": "measure(avg_high)",
+                      "expression": "MEASURE(`avg_high`)"
+                    },
+                    {
+                      "name": "measure(avg_low)",
+                      "expression": "MEASURE(`avg_low`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "frame": {
+                "title": "Daily OHLC Price Action",
+                "showTitle": true
+              },
+              "widgetType": "combo",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "measure(avg_close)",
+                        "displayName": "Close"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  },
+                  "secondary": {
+                    "fields": [
+                      {
+                        "fieldName": "measure(avg_high)",
+                        "displayName": "High"
+                      },
+                      {
+                        "fieldName": "measure(avg_low)",
+                        "displayName": "Low"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  }
+                },
+                "color": {
+                  "legend": {
+                    "position": "top"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 10
+          }
+        },
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Daily OHLC Price Action\n",
+                "Bars show **closing price**, lines show **daily high/low range**. Use the Symbol filter to select a single trading pair — prices vary by orders of magnitude across pairs."
+              ]
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 9,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "volume_analysis",
+      "displayName": "Volume Analysis",
+      "layout": [
+        {
+          "widget": {
+            "name": "symbol_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "symbol_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Symbol",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "symbol",
+                    "queryName": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "volume_bars",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "measure(sum_volume)",
+                      "expression": "MEASURE(`sum_volume`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Daily Trading Volume",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "stack"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(sum_volume)",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Volume",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "symbol",
+                  "legend": {
+                    "position": "top"
+                  },
+                  "displayName": "Symbol",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "trade_count",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "measure(total_trades_sum)",
+                      "expression": "MEASURE(`total_trades_sum`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Trade Count Over Time",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "stack"
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(total_trades_sum)",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Trades",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "symbol",
+                  "legend": {
+                    "position": "top"
+                  },
+                  "displayName": "Symbol",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Volume & Trade Activity\n",
+                "Stacked bars show **total base volume** and area chart shows **trade count** across all symbols over time."
+              ]
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 9,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "volatility",
+      "displayName": "Volatility",
+      "layout": [
+        {
+          "widget": {
+            "name": "symbol_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "symbol_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Symbol",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "symbol",
+                    "queryName": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_symbol"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "volatility_line",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "measure(avg_amplitude)",
+                      "expression": "MEASURE(`avg_amplitude`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Daily Volatility (Amplitude %)",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(avg_amplitude)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Avg Amplitude %",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "symbol",
+                  "legend": {
+                    "position": "top"
+                  },
+                  "displayName": "Symbol",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "amplitude_hist",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "symbol",
+                      "expression": "`symbol`"
+                    },
+                    {
+                      "name": "amplitude_pct",
+                      "expression": "`amplitude_pct`"
+                    },
+                    {
+                      "name": "measure(count)",
+                      "expression": "MEASURE(`count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "mark": {
+                "layout": "stack"
+              },
+              "frame": {
+                "title": "Volatility Distribution",
+                "showTitle": true
+              },
+              "widgetType": "histogram",
+              "encodings": {
+                "x": {
+                  "fieldName": "amplitude_pct",
+                  "displayName": "Amplitude %",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(count)",
+                  "displayName": "Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "symbol",
+                  "legend": {
+                    "position": "top"
+                  },
+                  "displayName": "Symbol",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Volatility Analysis\n",
+                "Amplitude % = (High - Low) / Low per day. Higher values indicate greater price swings and market uncertainty."
+              ]
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 9,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "global_filters",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "date_range",
+            "queries": [
+              {
+                "name": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_date",
+                "query": {
+                  "datasetName": "177a7f3b",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "date_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735af11fb7a42863f7e188ab95_timestamp_key",
+                "query": {
+                  "datasetName": "c090de20",
+                  "fields": [
+                    {
+                      "name": "timestamp_key",
+                      "expression": "`timestamp_key`"
+                    },
+                    {
+                      "name": "timestamp_key_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e7361b11dc3b0ba003eaa16b1c3_hour_start",
+                "query": {
+                  "datasetName": "13ea049a",
+                  "fields": [
+                    {
+                      "name": "hour_start",
+                      "expression": "`hour_start`"
+                    },
+                    {
+                      "name": "hour_start_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Date Range",
+                "showTitle": true
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "date",
+                    "queryName": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735dee16da85d7b6ae1c42a3c6_date"
+                  },
+                  {
+                    "fieldName": "timestamp_key",
+                    "queryName": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e735af11fb7a42863f7e188ab95_timestamp_key"
+                  },
+                  {
+                    "fieldName": "hour_start",
+                    "queryName": "dashboards/01f13e734e1d1249978f9bc9b07205e9/datasets/01f13e7361b11dc3b0ba003eaa16b1c3_hour_start"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "dark": "#050B14"
+      },
+      "widgetBackgroundColor": {
+        "dark": "#0B1320"
+      },
+      "widgetBorderColor": {
+        "dark": "#1E293B"
+      },
+      "fontColor": {
+        "dark": "#D1D4DC"
+      },
+      "selectionColor": {
+        "dark": "#0A84FF"
+      },
+      "visualizationColors": [
+        "#0A84FF",
+        "#5AC8FA",
+        "#30D5C8",
+        "#64D2FF",
+        "#0071E3",
+        "#7EB8DA",
+        "#4A90D9",
+        "#2DCDDF",
+        "#1B6CB0",
+        "#48B8D0"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "fontFamily": "Trebuchet MS"
+    },
+    "applyModeEnabled": false
+  }
+}

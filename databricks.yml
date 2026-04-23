@@ -1,0 +1,122 @@
+bundle:
+  name: crypto-lakehouse-platform
+
+variables:
+  catalog:
+    description: Unity Catalog target catalog
+    default: binance_platform
+  warehouse_id:
+    description: SQL warehouse ID for alerts
+    default: 28f14d9512d4fcf2
+
+include:
+  - resources/*.yml
+
+resources:
+  # Pipelines
+  pipelines:
+    bronze_pipeline:
+      name: "Crypto Bronze Ingest"
+      catalog: ${var.catalog}
+      target: bronze
+      serverless: true
+      channel: CURRENT
+      continuous: true
+      photon: true
+      configuration:
+        connection-string: "{{secrets/trading_secrets/eventhub_connection_string}}"
+      libraries:
+        - file:
+            path: ./pipelines/Crypto Bronze Ingest/bronze_pipeline.py
+
+    silver_gold_pipeline:
+      name: "Crypto Silver Gold"
+      catalog: ${var.catalog}
+      target: silver
+      serverless: true
+      channel: CURRENT
+      photon: true
+      libraries:
+        - file:
+            path: ./pipelines/Crypto Silver Gold/silver_pipeline.py
+        - file:
+            path: ./pipelines/Crypto Silver Gold/gold_pipeline.py
+
+  # Jobs
+  jobs:
+    data_ingestion_workflow:
+      name: "Data Ingestion Workflow"
+      environments:
+        - environment_key: default
+          spec:
+            client: "1"
+      tasks:
+        - task_key: metadata_ingestion
+          environment_key: default
+          spark_python_task:
+            python_file: ./Ingestion/metadata_ingestion.py
+            source: WORKSPACE
+
+        - task_key: raw_data_ingestion
+          depends_on:
+            - task_key: metadata_ingestion
+          environment_key: default
+          spark_python_task:
+            python_file: ./Ingestion/raw_data_ingestion.py
+            source: WORKSPACE
+
+        - task_key: refresh_bronze
+          depends_on:
+            - task_key: raw_data_ingestion
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.bronze_pipeline.id}
+            full_refresh: false
+
+        - task_key: refresh_silver_gold
+          depends_on:
+            - task_key: refresh_bronze
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.silver_gold_pipeline.id}
+            full_refresh: false
+
+    # WebSocket producer
+    websocket_producer:
+      name: "binance-websocket"
+      continuous:
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: binance-websocket
+          notebook_task:
+            notebook_path: ./notebooks/producer.ipynb
+            source: WORKSPACE
+
+    # Silver/Gold pipeline refresh every 5 minutes
+    silver_gold_refresh:
+      name: "Silver Gold Refresh"
+      schedule:
+        quartz_cron_expression: "0 */5 * * * ?"
+        timezone_id: "UTC"
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: refresh_silver_gold
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.silver_gold_pipeline.id}
+            full_refresh: false
+
+# Targets
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog: binance_platform
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Users/yousefsalem7704@gmail.com/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: binance_platform
+    permissions:
+      - user_name: yousefsalem7704@gmail.com
+        level: CAN_MANAGE

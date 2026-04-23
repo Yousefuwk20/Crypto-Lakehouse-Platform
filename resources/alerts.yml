@@ -1,0 +1,53 @@
+# resources/alerts.yml
+resources:
+  alerts:
+    # 1. Alert for Schema Drift
+    schema_drift_alert:
+      display_name: "[${bundle.target}] CRITICAL: Binance Schema Drift Detected"
+      warehouse_id: ${var.warehouse_id}
+      query_text: |
+        SELECT COUNT(*) AS new_columns_detected
+        FROM binance_platform.bronze.raw_klines_stream
+        WHERE _rescued_data IS NOT NULL
+          AND ingestion_timestamp > current_timestamp() - INTERVAL 15 MINUTES
+      evaluation:
+        comparison_operator: "GREATER_THAN"
+        source:
+          name: "new_columns_detected"
+          display: "new_columns_detected"
+        threshold:
+          value:
+            double_value: 0
+        notification:
+          notify_on_ok: false
+          subscriptions:
+            - user_email: "${workspace.current_user.userName}"
+      schedule:
+        pause_status: "UNPAUSED"
+        quartz_cron_schedule: "0 0/15 * * * ?"
+        timezone_id: "UTC"
+
+    # 2. Alert for Data Quality
+    quarantine_alert:
+      display_name: "[${bundle.target}] WARNING: Records in Quarantine"
+      warehouse_id: ${var.warehouse_id}
+      query_text: |
+        SELECT COUNT(*) AS quarantined_records
+        FROM binance_platform.silver.quarantine_klines
+        WHERE ingestion_timestamp > current_timestamp() - INTERVAL 1 HOUR
+      evaluation:
+        comparison_operator: "GREATER_THAN"
+        source:
+          name: "quarantined_records"
+          display: "quarantined_records"
+        threshold:
+          value:
+            double_value: 5
+        notification:
+          notify_on_ok: false
+          subscriptions:
+            - user_email: "${workspace.current_user.userName}"
+      schedule:
+        pause_status: "UNPAUSED"
+        quartz_cron_schedule: "0 0/30 * * * ?"
+        timezone_id: "UTC"

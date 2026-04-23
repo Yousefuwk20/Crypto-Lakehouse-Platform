@@ -1,0 +1,7 @@
+# resources/dashboard.yml
+resources:
+  dashboards:
+    binance_crypto_trading_analytics:
+      display_name: "[${bundle.target}] Binance Crypto Trading Analytics"
+      file_path: ../dashboards/binance_crypto_trading_analytics.lvdash.json
+      warehouse_id: ${var.warehouse_id}
