@@ -86,6 +86,7 @@ def dim_time():
     comment = "Core fact table — 1min OHLCV per symbol",
     table_properties = {
         "quality"                         : "gold",
+        "delta.enableDeletionVectors"     : "true"
     },
     cluster_by = ["symbol_id", "timestamp_key"]
 )
@@ -100,7 +101,7 @@ def fact_klines():
     silver = (
         silver_stream
         .filter(F.col("is_final") == True)
-        .withWatermark("open_time_ts", "10 minutes")
+        .withWatermark("open_time_ts", "2 minutes")
         .dropDuplicates(["symbol", "open_time_ts"])
     )
 

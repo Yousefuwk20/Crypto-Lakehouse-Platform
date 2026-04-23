@@ -24,6 +24,24 @@ RAW_SCHEMA = StructType([
     StructField("ignore",              StringType(),  True),
 ])
 
+KLINE_STREAM_SCHEMA = StructType([
+    StructField("s", StringType(), True),
+    StructField("k", StructType([
+        StructField("t", LongType(),    True),
+        StructField("T", LongType(),    True),
+        StructField("o", StringType(),  True),
+        StructField("h", StringType(),  True),
+        StructField("l", StringType(),  True),
+        StructField("c", StringType(),  True),
+        StructField("v", StringType(),  True),
+        StructField("n", IntegerType(), True),
+        StructField("q", StringType(),  True),
+        StructField("V", StringType(),  True),
+        StructField("Q", StringType(),  True),
+        StructField("x", BooleanType(), True),
+    ]), True)
+])
+
 @dlt.view(
     name = "v_raw_klines",
     comment = "Raw kline data ingested from UC Volume via Auto Loader",
@@ -34,6 +52,7 @@ def v_raw_klines():
         spark.readStream
             .format("cloudFiles")
             .option("cloudFiles.format", "csv")
+            .option("cloudFiles.schemaEvolutionMode", "rescue")
             .option("header", "false")
             .schema(RAW_SCHEMA)
             .load(INGESTION_PATH)
@@ -48,6 +67,9 @@ def v_raw_klines():
 @dlt.table(
     name    = "raw_klines_stream",
     comment = "Parsed Kafka stream — replayable Bronze source",
+    spark_conf = {
+        "spark.sql.caseSensitive": "true"
+    },
     table_properties = {
         "quality"                         : "bronze",
         "delta.enableDeletionVectors"     : "true"
@@ -75,7 +97,7 @@ def raw_klines_stream():
     "kafka.session.timeout.ms" : 10000,
     "maxOffsetsPerTrigger"     : 10000,
     "failOnDataLoss"           : 'false',
-    "startingOffsets"          : 'earliest'
+    "startingOffsets"          : 'latest'
     }
 
     return (
@@ -84,23 +106,25 @@ def raw_klines_stream():
         .options(**KAFKA_OPTIONS)
         .load()
         .withColumn("json_str", F.col("value").cast("string"))
+        .withColumn("parsed", F.from_json("json_str", KLINE_STREAM_SCHEMA))
         .select(
-            F.get_json_object("json_str", "$.s")          .alias("symbol"),
-            F.get_json_object("json_str", "$.k.t").cast("long").alias("open_time"),
-            F.get_json_object("json_str", "$.k.T").cast("long").alias("close_time"),
-            F.get_json_object("json_str", "$.k.o")        .alias("open"),
-            F.get_json_object("json_str", "$.k.h")        .alias("high"),
-            F.get_json_object("json_str", "$.k.l")        .alias("low"),
-            F.get_json_object("json_str", "$.k.c")        .alias("close"),
-            F.get_json_object("json_str", "$.k.v")        .alias("volume"),
-            F.get_json_object("json_str", "$.k.n").cast("int").alias("number_of_trades"),
-            F.get_json_object("json_str", "$.k.q")        .alias("quote_asset_volume"),
-            F.get_json_object("json_str", "$.k.V")        .alias("taker_buy_base_vol"),
-            F.get_json_object("json_str", "$.k.Q")        .alias("taker_buy_quote_vol"),
-            F.get_json_object("json_str", "$.k.x").cast("boolean").alias("is_final"),
-            F.current_timestamp()                          .alias("ingestion_timestamp"),
-            F.lit("binance_spot_websocket")                .alias("source_system"),
-            F.lit("event_hub_stream")                      .alias("source_file"),
+            F.col("parsed.s")                .alias("symbol"),
+            F.col("parsed.k.t")              .alias("open_time"),
+            F.col("parsed.k.T")              .alias("close_time"),
+            F.col("parsed.k.o")              .alias("open"),
+            F.col("parsed.k.h")              .alias("high"),
+            F.col("parsed.k.l")              .alias("low"),
+            F.col("parsed.k.c")              .alias("close"),
+            F.col("parsed.k.v")              .alias("volume"),
+            F.col("parsed.k.n")              .alias("number_of_trades"),
+            F.col("parsed.k.q")              .alias("quote_asset_volume"),
+            F.col("parsed.k.V")              .alias("taker_buy_base_vol"),
+            F.col("parsed.k.Q")              .alias("taker_buy_quote_vol"),
+            F.col("parsed.k.x")              .alias("is_final"),
+            F.current_timestamp()             .alias("ingestion_timestamp"),
+            F.lit("binance_spot_websocket")   .alias("source_system"),
+            F.lit("event_hub_stream")         .alias("source_file"),
+            F.col("json_str")                .alias("_rescued_data"),
         )
     )
 
