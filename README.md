@@ -99,6 +99,7 @@ Crypto-Lakehouse-Platform/
 │
 ├── resources/
 │   └── alerts.yml                                  # SQL Alerts: schema drift + quarantine monitoring
+│   └── dashboard.yml                               # Dashboard Config file
 │
 ├── dashboards/
 │   ├── binance_crypto_trading_analytics.lvdash.json  # Lakeview dashboard definition
@@ -314,7 +315,7 @@ Detects **missing 1-minute candles** in the last 7 days per symbol. Uses a cross
 
 ## Data Model — Star Schema
 
-![Star Schema](diagrams/Star%20Schema.png)
+![Star Schema](diagrams/Star%20Scehma.png)
 
 ### Gold Layer Tables
 
