@@ -115,6 +115,8 @@ Crypto-Lakehouse-Platform/
 │   ├── Architecture Diagram.png                        # High-level architecture visual
 │   ├── Pipeline Diagram.gif                            # Animated DLT pipeline flow
 │   └── Star Schema.png                                 # Gold layer star schema diagram
+│   └── Lineage.png                                     # Full data lineage diagram
+|
 └── databricks.yml                                  # DAB bundle: pipelines, jobs, schedules, targets
 
 ```
@@ -350,6 +352,14 @@ binance_platform (catalog)
     ├── agg_daily_summary
     └── quality_gap_report
 ```
+
+---
+
+## 🔗 Data Lineage
+
+The diagram below traces the full end-to-end lineage of every data asset in the platform — from raw data through each Medallion layer.
+
+![Data Lineage](diagrams/Lineage.png)
 
 ---
 
