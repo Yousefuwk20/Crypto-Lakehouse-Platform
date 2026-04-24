@@ -453,7 +453,7 @@ The entire platform is deployed and managed via `databricks.yml`. The bundle def
 ### DLT Pipelines
 
 | Pipeline | Mode | Libraries |
-|---|---|---|---|
+|---|---|---|
 | `Crypto Bronze Ingest` | **Continuous** | `bronze_pipeline.py` |
 | `Crypto Silver Gold` | **Triggered** | `silver_pipeline.py` + `gold_pipeline.py` |
 
