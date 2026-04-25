@@ -20,30 +20,13 @@
 
 ## 📌 Project Overview
 
-The **Crypto Streaming Lakehouse Platform** is a fully automated, cloud-native data pipeline that collects, processes, and models cryptocurrency market data from Binance at **1-minute OHLCV (Open, High, Low, Close, Volume) granularity**, spanning from **2019 to present**.
+The **Crypto Streaming Lakehouse Platform** is a fully automated, cloud-native data pipeline that collects, processes, and models cryptocurrency market data from Binance at **1-minute OHLCV (Open, High, Low, Close, Volume) granularity**, spanning from **2017 to present**.
 
 The platform operates two parallel ingestion tracks:
 - **Historical Bulk Ingestion** — Downloads monthly kline archives from the Binance Vision public data repository, covering years of market history per symbol.
 - **Real-Time Streaming** — A continuously running WebSocket producer that forwards live candle updates from Binance to **Azure Event Hubs**, feeding a low-latency streaming pipeline in near real-time.
 
 Both tracks converge into a unified **Medallion Architecture** (Bronze → Silver → Gold) powered by **Delta Live Tables (DLT)** and **Delta Lake**, deployed and orchestrated entirely via **Databricks Asset Bundles (DABs)**.
-
-### 📈 Tracked Trading Pairs (10 Symbols)
-
-All pairs are quoted in **USDT**:
-
-| # | Symbol | Base Asset | Historical Start |
-|---|--------|------------|-----------------|
-| 1 | BTCUSDT | Bitcoin | Jan 2019 |
-| 2 | ETHUSDT | Ethereum | Jan 2019 |
-| 3 | BNBUSDT | BNB | Jan 2019 |
-| 4 | SOLUSDT | Solana | Aug 2020 |
-| 5 | ADAUSDT | Cardano | Jan 2019 |
-| 6 | XRPUSDT | XRP | Jan 2019 |
-| 7 | DOGEUSDT | Dogecoin | Jul 2019 |
-| 8 | AVAXUSDT | Avalanche | Sep 2020 |
-| 9 | LINKUSDT | Chainlink | Jan 2019 |
-| 10 | DOTUSDT | Polkadot | Aug 2020 |
 
 ---
 
@@ -107,6 +90,8 @@ Crypto-Lakehouse-Platform/
 │   ├── Market Sentiment.png                        # Dashboard screenshot
 │   ├── Volatility.png                              # Dashboard screenshot
 │   └── Volume Analysis.png                         # Dashboard screenshot
+│   └── Binance_Crypto_Trading_Analytics.pdf        # PDF version of the dashboard
+|
 │
 ├── docs/
 │   ├── Data Dictionary.md                          # Column-level definitions across all layers
@@ -135,7 +120,7 @@ The platform is built as a **4-phase pipeline** that moves data from raw source 
 
 #### Step 1 — Metadata Ingestion (`Ingestion/metadata_ingestion.py`)
 
-Calls the Binance REST endpoint `GET /api/v3/exchangeInfo` and extracts the 10 tracked symbols. For each symbol, the script enriches the response with a custom `tracking_start_ts` field (the date data collection began), then writes the filtered JSON to the Unity Catalog Volume:
+Calls the Binance REST endpoint `GET /api/v3/exchangeInfo` and extracts the 90 tracked symbols. For each symbol, the script enriches the response with a custom `tracking_start_ts` field (the date data collection began), then writes the filtered JSON to the Unity Catalog Volume:
 
 ```
 /Volumes/binance_platform/default/raw_data/metadata/exchange_info.json
@@ -170,7 +155,7 @@ Key design decisions:
 
 #### `notebooks/producer.ipynb`
 
-Opens a **single multiplexed WebSocket connection** to Binance's combined stream endpoint, subscribing to all 10 `<symbol>@kline_1m` streams simultaneously:
+Opens a **single multiplexed WebSocket connection** to Binance's combined stream endpoint, subscribing to all 90 `<symbol>@kline_1m` streams simultaneously:
 
 ```
 wss://stream.binance.com:9443/stream?streams=btcusdt@kline_1m/ethusdt@kline_1m/...
@@ -277,7 +262,7 @@ Reads `exchange_info.json` from the UC Volume and assigns a deterministic `symbo
 
 #### `dim_time` — Time Dimension
 
-A pre-built **minute-grain time dimension** spanning 2019 → 2030 (~5.7M rows). Provides rich date attributes:
+A pre-built **minute-grain time dimension** spanning 2017 → 2027 (~5M rows). Provides rich date attributes:
 
 | Attribute | Examples |
 |---|---|
@@ -372,7 +357,7 @@ The platform ships with a fully-configured **Databricks dashboards** (`dashboard
 ---
 
 #### 📉 Daily Price Action
-Visualizes per-symbol OHLCV candles, closing price trends, and daily price change percentage across the 10 tracked pairs.
+Visualizes per-symbol OHLCV candles, closing price trends, and daily price change percentage across the 90 tracked pairs.
 
 ![Daily Price Action](dashboards/Daily%20Price%20Action.png)
 
@@ -518,7 +503,7 @@ This job runs the 4-task chain: metadata fetch → CSV download → Bronze refre
 databricks bundle run data_ingestion_workflow --target dev
 ```
 
-> ⏱️ Downloading all 10 symbols from 2019 to present (monthly CSVs) may take 15–30 minutes depending on network throughput. The job is fully idempotent — safe to re-run.
+> ⏱️ Downloading all 90 symbols from 2017 to present (monthly CSVs) may take 15–30 minutes depending on network throughput. The job is fully idempotent — safe to re-run.
 
 ### 6. Start the WebSocket Producer
 
