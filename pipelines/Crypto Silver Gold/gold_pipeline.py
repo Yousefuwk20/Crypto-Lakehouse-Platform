@@ -9,7 +9,7 @@ from pyspark.sql.types import (
 # dim_symbol
 @dlt.table(
     name = "dim_symbol",
-    comment = "Curated metadata for our 10 active trading pairs",
+    comment = "Curated metadata for our 90 active trading pairs",
     table_properties = {"quality": "gold"}
 )
 
@@ -32,7 +32,7 @@ def dim_symbol():
 
 @dlt.table(
     name    = "dim_time",
-    comment = "Time dimension — minute grain from 2019 to 2030",
+    comment = "Time dimension — minute grain from 2017 to 2030",
     table_properties = {"quality": "gold"},
     cluster_by = ["timestamp_key"]
 )
@@ -42,8 +42,8 @@ def dim_time():
         spark.sql("""
             SELECT explode(
                 sequence(
-                    timestamp '2019-01-01 00:00:00',
-                    timestamp '2030-01-01 00:00:00',
+                    timestamp '2017-08-01 00:00:00',
+                    timestamp '2027-01-01 00:00:00',
                     interval 1 minute
                 )
             ) AS timestamp_key

@@ -48,7 +48,7 @@ def v_staged_klines():
 # Data Quality Rules
 KLINE_RULES = {
     "valid_price": "close > 0 AND high >= low",
-    "valid_timestamp": "open_time_ts IS NOT NULL AND open_time_ts > '2018-12-31'",
+    "valid_timestamp": "open_time_ts IS NOT NULL AND open_time_ts > '2017-08-01'",
     "valid_symbol": "symbol IS NOT NULL"
 }
 
