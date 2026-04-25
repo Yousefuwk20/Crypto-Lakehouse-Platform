@@ -28,6 +28,8 @@ The platform operates two parallel ingestion tracks:
 
 Both tracks converge into a unified **Medallion Architecture** (Bronze → Silver → Gold) powered by **Delta Live Tables (DLT)** and **Delta Lake**, deployed and orchestrated entirely via **Databricks Asset Bundles (DABs)**.
 
+At current scale, the platform processes **253 million raw records** across historical and streaming ingestion flows.
+
 ---
 
 ## 🏗️ Architecture
@@ -91,6 +93,12 @@ Crypto-Lakehouse-Platform/
 │   ├── Volatility.png                              # Dashboard screenshot
 │   └── Volume Analysis.png                         # Dashboard screenshot
 │   └── Binance_Crypto_Trading_Analytics.pdf        # PDF version of the dashboard
+│
+├── Screen shots/
+│   ├── Binance Websocket.png                       # WebSocket producer runtime screenshot
+│   ├── Event Hub.png                               # Azure Event Hub monitoring screenshot
+│   ├── Streaming Job.png                           # Databricks streaming job screenshot
+│   └── demo.mp4                                    # End-to-end Streaming demo video
 |
 │
 ├── docs/
@@ -162,11 +170,15 @@ wss://stream.binance.com:9443/stream?streams=btcusdt@kline_1m/ethusdt@kline_1m/.
 ```
 
 **Key behaviors:**
-- Messages are batched in memory (`BATCH_SIZE = 50`) and flushed to **Azure Event Hubs** using the async `EventHubProducerClient`.
+- Messages are batched in memory (`BATCH_SIZE = 100`) and flushed to **Azure Event Hubs** using the async `EventHubProducerClient`.
 - The batch is also flushed whenever the Azure SDK signals the batch size limit is reached (auto-flush on overflow).
 - **Auto-reconnect logic**: on any WebSocket disconnection or error, the remaining batch is flushed before reconnecting after a `RETRY_DELAY_S = 5` second backoff.
 - The Event Hub connection string is retrieved from **Databricks Secret Scope** (`trading_secrets/eventhub_connection_string`).
 - All events are forwarded to the `klines-raw` Event Hub in the `binance-streaming` namespace.
+
+#### Event Hub Snapshot
+
+![Azure Event Hub](Screen%20shots/Event%20Hub.png)
 
 ---
 

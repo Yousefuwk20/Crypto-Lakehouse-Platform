@@ -80,7 +80,7 @@ def get_listing_date(symbol: str):
             return datetime.date.fromtimestamp(ts_ms / 1000)
     except Exception as e:
         logging.warning(f"Could not fetch listing date for {symbol}: {e}")
-    return datetime.date(2019, 1, 1)
+    return datetime.date(2017, 8, 1)
 
 
 def resolve_symbols(candidates: list[str]):
